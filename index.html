@@ -1,0 +1,941 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1, maximum-scale=1" />
+    <title>Area51</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <script type="module">
+      import createGlobe from 'https://cdn.skypack.dev/cobe';
+      window.createGlobe = createGlobe;
+    </script>
+
+    <style>
+      body {
+        font-family: "JetBrains Mono", Helvetica, sans-serif;
+        color: #ebebea;
+        background: #222;
+        margin: 0;
+        overflow: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+      a { color: inherit; text-decoration: none; }
+      .page-container { position: relative; height: 100vh; width: 100vw; }
+      .corner-element { position: absolute; z-index: 10; }
+      .top-left { top: 60px; left: 60px; }
+      .top-right { top: 60px; right: 60px; display: flex; gap: 10px; }
+      .bottom-left { bottom: 60px; left: 60px; cursor: pointer; }
+      .logo { max-width: 50px; height: 50px; }
+      .top-right a {
+        font-size: 10px; font-weight: 500; letter-spacing: 0.3px;
+        transition: color 0.3s ease;
+      }
+      .top-right a:hover,
+      .top-right a.active-link {
+        color: #9D96F3;
+      }
+      .bio {
+        font-size: 14px;
+        font-weight: 500;
+        margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        line-height: 1.4em;
+        max-height: 4.2em;
+      }
+      #content {
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        max-width: 90vw;
+        max-height: 90vh;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        z-index: 5;
+      }
+      #cobe {
+        width: 100%;
+        height: 100%;
+        cursor: grab;
+      }
+      #cobe:active { cursor: grabbing; }
+      .login-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 20px;
+      }
+      .login-form {
+        width: 100%;
+        max-width: 300px;
+        margin-top: 2em;
+      }
+      .form-group { margin-bottom: 1.5em; }
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5em;
+      }
+      .form-group input {
+        width: 100%;
+        padding: 0.5em;
+        font-size: 14px;
+        background-color: #333;
+        border: 1px solid #555;
+        color: #ebebea;
+      }
+      .login-button {
+        width: 100%;
+        padding: 0.75em;
+        background-color: #5a4fd0;
+        color: #222;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+      .login-button:hover {
+        background-color: #e0b700;
+      }
+      .back-link { margin-top: 1em; }
+
+      /* Pong specific styles */
+      #pongCanvas {
+        background: #222;
+        border: 2px solid white;
+        max-width: 100%; /* Ensure responsiveness */
+        max-height: 100%; /* Ensure responsiveness */
+      }
+
+      /* Bug Banner Style */
+      #error-banner {
+        position: fixed;
+        top: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: auto;
+        max-width: 90%;
+        background-color: #D92D20;
+        color: white;
+        padding: 12px 24px;
+        z-index: 9999;
+        display: none;
+        font-size: 14px;
+        font-weight: 500;
+        border-radius: 8px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+      }
+
+      /* Example for brand-2-background if needed */
+      .page-container.brand-2-background {
+        background-color: #333;
+      }
+
+      /* --- NEW STYLES FOR PAGE 01 (ARTICLE/BLOG) --- */
+      .article-container {
+        width: 80vw;
+        max-width: 800px;
+        margin: auto;
+        padding: 40px 20px;
+        background-color: #2e2e2e;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+        text-align: left;
+        display: grid;
+        grid-template-columns: 1fr; /* Default to single column */
+        gap: 30px;
+      }
+
+      .article-container h1 {
+        font-size: 3em;
+        color: #9D96F3;
+        margin-bottom: 20px;
+        text-align: center;
+        line-height: 1.2;
+      }
+
+      .article-meta {
+        font-size: 0.8em;
+        color: #ccc;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .article-column {
+        padding-right: 15px;
+        line-height: 1.7;
+        font-size: 1.1em;
+      }
+
+      .article-column + .article-column {
+        padding-left: 15px;
+        border-left: 1px solid #555;
+      }
+
+      .article-column p {
+        margin-bottom: 1em;
+      }
+
+      .article-column strong {
+        color: #E0B700;
+      }
+
+      /* Two column layout for larger screens */
+      @media (min-width: 769px) {
+        .article-container {
+          grid-template-columns: 1fr 1fr; /* Two columns */
+        }
+        .article-main-heading {
+            grid-column: 1 / -1; /* Span across both columns */
+        }
+        .article-meta {
+            grid-column: 1 / -1; /* Span across both columns */
+        }
+      }
+
+      /* --- NEW WEB APP UI STYLES FOR PAGE 02 --- */
+      .app-dashboard {
+        display: grid;
+        grid-template-columns: 250px 1fr; /* Sidebar and main content */
+        gap: 30px;
+        width: 90vw;
+        height: 80vh;
+        max-width: 1200px;
+        max-height: 900px;
+        background-color: #2e2e2e; /* Slightly lighter dark for app background */
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+        padding: 20px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        overflow: hidden; /* To keep content within bounds */
+      }
+
+      .app-sidebar {
+        background-color: #3a3a3a; /* Darker sidebar */
+        border-radius: 8px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .sidebar-section h3 {
+        color: #9D96F3;
+        font-size: 14px;
+        margin-top: 0;
+        margin-bottom: 15px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .sidebar-menu a {
+        display: block;
+        padding: 8px 10px;
+        margin-bottom: 5px;
+        color: #ebebea;
+        font-size: 12px;
+        transition: background-color 0.2s ease, color 0.2s ease;
+        border-radius: 4px;
+      }
+
+      .sidebar-menu a:hover, .sidebar-menu a.active {
+        background-color: #5a4fd0;
+        color: #222;
+      }
+
+      .app-main-content {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .dashboard-card {
+        background-color: #3a3a3a;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        flex: 1; /* Allow cards to grow and shrink */
+      }
+
+      .dashboard-card h2 {
+        color: #ebebea;
+        font-size: 16px;
+        margin-top: 0;
+        margin-bottom: 15px;
+        border-bottom: 1px solid #555;
+        padding-bottom: 10px;
+      }
+
+      .activity-item {
+        font-size: 12px;
+        margin-bottom: 10px;
+        color: #ccc;
+      }
+
+      .activity-item strong {
+        color: #9D96F3;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 15px;
+        text-align: center;
+      }
+
+      .stat-item div {
+        font-size: 24px;
+        font-weight: 700;
+        color: #e0b700;
+      }
+
+      .stat-item span {
+        font-size: 10px;
+        display: block;
+        color: #ccc;
+        margin-top: 5px;
+      }
+
+      .pong-widget {
+        flex: 2; /* Allow Pong to take more space */
+        min-height: 300px; /* Ensure pong canvas has enough space */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      /* Ensure Pong canvas scales within its container */
+      #pongCanvas {
+        width: 100%;
+        height: auto; /* Maintain aspect ratio */
+        max-height: 400px; /* Limit height */
+        display: block; /* Remove extra space below canvas */
+      }
+
+      /* Adjust content area for dashboard layout and article layout */
+      #content.dashboard-layout, #content.article-layout {
+        position: static; /* Remove absolute positioning when in these modes */
+        width: auto;
+        height: auto;
+        max-width: none;
+        max-height: none;
+        margin: 0;
+        display: block; /* Allow flexbox/grid of internal containers to take over */
+      }
+
+      /* Responsive adjustments for overall layout */
+      @media (max-width: 768px) {
+        .app-dashboard {
+          grid-template-columns: 1fr; /* Stack sidebar and main content */
+          height: auto;
+          overflow-y: auto;
+          padding: 15px;
+          margin: 20px auto; /* Center with margin */
+          width: 95vw;
+          max-height: 95vh;
+        }
+        .app-sidebar {
+          padding: 15px;
+        }
+        .app-main-content {
+          padding-bottom: 20px; /* Add some space at the bottom */
+        }
+        .top-left, .top-right, .bottom-left {
+          position: static;
+          text-align: center;
+          margin: 10px auto;
+          display: block;
+        }
+        .top-right {
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+        .logo {
+          margin-bottom: 10px;
+        }
+
+        .article-container {
+            padding: 20px 15px;
+        }
+
+        .article-column {
+            padding: 0; /* Remove internal padding when stacked */
+            border-left: none; /* Remove border when stacked */
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="error-banner">Hurry dear! There's a bug 🐛</div>
+
+    <div class="page-container">
+      <div class="corner-element top-left">
+        <img src="https://cdn.glitch.global/9d086b22-c6c8-44c2-b8cc-aabb00ea8a30/logo.png?v=1724728425599" alt="Logo" class="logo"/>
+      </div>
+      <nav class="corner-element top-right">
+        <a class="link-home" href="#home">home</a>
+        <a class="link-page1" href="#page1">page 01</a>
+        <a class="link-page2" href="#page2">page 02</a>
+        <a class="link-page3" href="#page3">page 03</a>
+        <a class="link-brand02" href="#brand02">brand 02</a>
+        <a class="link-bug" href="#bug">bug</a>
+        <a class="link-help" href="https://intercom.help/intercondiment01/en">help</a>
+        <a class="link-login" href="#login">login</a>
+        <a class="link-logout" href="#" onclick="logout()">logout</a>
+      </nav>
+      <div class="corner-element bottom-left">
+        <p class="bio"></p>
+      </div>
+      <div id="content"></div>
+    </div>
+
+    <script>
+      let globe = null;
+      let pongAnimationFrameId = null;
+      let bugInterval = null;
+
+      let canvas, ctx;
+      let player1 = { x: 10, y: 150, width: 10, height: 100, dy: 0, score: 0 };
+      let player2 = { x: 580, y: 150, width: 10, height: 100, dy: 0, score: 0 };
+      let ball = { x: 300, y: 200, radius: 7, dx: 5, dy: 5 };
+      const paddleSpeed = 5;
+      const pressedKeys = {};
+
+      document.addEventListener("DOMContentLoaded", function () {
+        updateLoginUI();
+        document.addEventListener("submit", function (event) {
+          const loginForm = event.target.closest(".login-form");
+          if (loginForm) {
+            event.preventDefault();
+            handleLogin();
+          }
+        });
+        loadPage();
+      });
+
+      window.addEventListener("hashchange", () => loadPage());
+
+      function loadPage(pageFromHash) {
+        const page = pageFromHash || window.location.hash.slice(1) || "home";
+
+        const content = document.getElementById("content");
+        const bioText = document.querySelector(".bottom-left .bio");
+        const links = document.querySelectorAll(".top-right a");
+        const errorBanner = document.getElementById("error-banner");
+        const pageContainer = document.querySelector(".page-container");
+
+        links.forEach(link => link.classList.remove("active-link"));
+        if (globe) {
+            globe.destroy();
+            globe = null;
+        }
+        if (pongAnimationFrameId) {
+            cancelAnimationFrame(pongAnimationFrameId);
+            pongAnimationFrameId = null;
+            document.removeEventListener('keydown', handlePongKeyDown);
+            document.removeEventListener('keyup', handlePongKeyUp);
+        }
+        if (bugInterval) {
+            clearInterval(bugInterval);
+            bugInterval = null;
+        }
+
+        errorBanner.style.display = 'none';
+        pageContainer.classList.remove('brand-2-background');
+        // Remove both layout classes by default to ensure clean slate
+        content.classList.remove('dashboard-layout');
+        content.classList.remove('article-layout');
+        content.innerHTML = '';
+        bioText.style.display = 'none';
+        document.querySelector('.bottom-left').onclick = null;
+
+
+        const activeLink = document.querySelector(`.link-${page.split(' ')[0]}`);
+        if (activeLink) activeLink.classList.add('active-link');
+
+        switch (page) {
+          case "home":
+            content.innerHTML = `<canvas id="cobe"></canvas>`;
+            bioText.style.display = 'block';
+            document.querySelector('.bottom-left').onclick = setRandomFact;
+            initializeGlobe();
+            setRandomFact();
+            break;
+          case "page1":
+            content.classList.add('article-layout');
+            content.innerHTML = `
+                <div class="article-container">
+                    <h1 class="article-main-heading">Exploring the Expanse: Beyond Our Cosmic Backyard</h1>
+                    <p class="article-meta">Published by **Astro-Bot** on July 1, 2025</p>
+
+                    <div class="article-column">
+                        <p>The universe is a canvas of unimaginable scale, stretching far beyond the familiar confines of our solar system. For centuries, humanity has gazed skyward, pondering the mysteries held within the twinkling lights above. What began as simple observation has evolved into sophisticated scientific inquiry, propelling us to the cusp of intergalactic understanding.</p>
+                        <p>One of the most profound discoveries of modern astronomy is the **accelerated expansion of the universe**. This phenomenon suggests that not only is the cosmos growing, but the rate at which it expands is increasing over time. This unexpected finding has led to the hypothesis of "dark energy," a mysterious force believed to be responsible for this cosmic acceleration, though its true nature remains one of science's greatest puzzles.</p>
+                        <p>Beyond our Milky Way, countless other galaxies drift through the void. Each is a sprawling island of stars, gas, and dust, often billions of light-years away. The Andromeda galaxy, our closest large galactic neighbor, is on a collision course with the Milky Way, a cosmic dance set to unfold over billions of years, eventually merging into a new, larger galaxy.</p>
+                        <p>The search for **exoplanets**—planets orbiting stars other than our Sun—has revolutionized our understanding of planetary formation and the potential for life beyond Earth. Thousands of exoplanets have been discovered, ranging from gas giants far larger than Jupiter to rocky worlds barely bigger than our own. Some reside in the "habitable zone" of their stars, where conditions might be just right for liquid water, a key ingredient for life as we know it.</p>
+                    </div>
+                    <div class="article-column">
+                        <p>Distant **quasars**, powered by supermassive black holes at the centers of nascent galaxies, provide glimpses into the early universe. These incredibly luminous objects emit vast amounts of energy, acting as cosmic lighthouses that illuminate the structure and evolution of the cosmos. Studying their light allows astronomers to peer back in time, unraveling the conditions that existed shortly after the Big Bang.</p>
+                        <p>The concept of **wormholes**, hypothetical tunnels through spacetime, continues to captivate scientists and science fiction enthusiasts alike. While purely theoretical, they offer intriguing possibilities for faster-than-light travel or even shortcuts through vast cosmic distances. However, their existence remains unproven, requiring conditions and materials currently beyond our technological reach and understanding.</p>
+                        <p>The mysteries of **black holes**—regions of spacetime where gravity is so strong that nothing, not even light, can escape—are gradually being unraveled. From stellar-mass black holes born from dying stars to supermassive black holes lurking at galactic cores, these enigmatic objects play a crucial role in galactic evolution. Recent images have even allowed us to "see" their event horizons, pushing the boundaries of observation.</p>
+                        <p>As we continue to develop more powerful telescopes and probes, our ability to explore and comprehend the universe grows. The journey into the unknown is unending, promising new revelations and challenging our perceptions of reality with every discovery. The cosmos is an endless source of wonder, inviting us to keep looking up.</p>
+                    </div>
+                </div>
+            `;
+            bioText.textContent = "Insights from the Cosmic Frontier.";
+            bioText.style.display = 'block';
+            break;
+          case "page2":
+            content.classList.add('dashboard-layout');
+            content.innerHTML = `
+              <div class="app-dashboard">
+                <div class="app-sidebar">
+                  <div class="sidebar-section">
+                    <h3>Navigation</h3>
+                    <div class="sidebar-menu">
+                      <a href="#" class="active">Dashboard Home</a>
+                      <a href="#">Settings</a>
+                      <a href="#">Reports</a>
+                      <a href="#">Integrations</a>
+                    </div>
+                  </div>
+                  <div class="sidebar-section">
+                    <h3>Resources</h3>
+                    <div class="sidebar-menu">
+                      <a href="https://intercom.help/intercondiment01/en" target="_blank">Help Center</a>
+                      <a href="#">Contact Support</a>
+                    </div>
+                  </div>
+                </div>
+                <div class="app-main-content">
+                  <div class="dashboard-card pong-widget">
+                    <h2>Retro Pong Game</h2>
+                    <canvas id="pongCanvas" width="600" height="400"></canvas>
+                  </div>
+                  <div class="dashboard-card">
+                    <h2>Recent Activity</h2>
+                    <div class="activity-feed">
+                      <p class="activity-item"><strong>[10:05 AM]</strong> User <span style="color: #E0B700;">@OllieVoil</span> logged in.</p>
+                      <p class="activity-item"><strong>[09:45 AM]</strong> Pong game started by <span style="color: #E0B700;">@MayorNays</span>.</p>
+                      <p class="activity-item"><strong>[08:30 AM]</strong> New feature 'Intercom Test' enabled.</p>
+                      <p class="activity-item"><strong>[Yesterday]</strong> Welcome email sent to <span style="color: #E0B700;">new user</span>.</p>
+                    </div>
+                  </div>
+                  <div class="dashboard-card">
+                    <h2>Quick Stats</h2>
+                    <div class="stats-grid">
+                      <div class="stat-item">
+                        <div>1,234</div>
+                        <span>Active Users</span>
+                      </div>
+                      <div class="stat-item">
+                        <div>56</div>
+                        <span>New Signups</span>
+                      </div>
+                      <div class="stat-item">
+                        <div>3.2K</div>
+                        <span>Messages Sent</span>
+                      </div>
+                      <div class="stat-item">
+                        <div>99%</div>
+                        <span>Uptime</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+            initializePong();
+            // Track a custom Intercom event for dashboard view
+            if (window.Intercom) {
+                Intercom('trackEvent', 'dashboard_viewed');
+            }
+            break;
+          case "page3":
+            content.innerHTML = '<canvas id="pongCanvas" width="600" height="400"></canvas>';
+            initializePong();
+            // Note: Pong game specific setup remains here for page 03
+            break;
+          case "login":
+            content.innerHTML = `
+              <div class="login-container">
+                <form class="login-form">
+                  <div class="form-group">
+                    <label for="username">Email</label>
+                    <input type="email" id="username" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required />
+                  </div>
+                  <button type="submit" class="login-button">Login</button>
+                </form>
+                <div class="back-link">
+                  <a href="#home">Back to Home</a>
+                </div>
+              </div>`;
+            bioText.textContent = "Login to Area51";
+            bioText.style.display = 'block';
+            break;
+          case "brand02":
+            pageContainer.classList.add('brand-2-background');
+            break;
+          case "bug":
+            errorBanner.style.display = 'block';
+            setTimeout(() => { errorBanner.style.display = 'none'; }, 5000);
+
+            console.error("Uncaught TypeError: Cannot read properties of null (reading 'session')");
+            let errorCount = 0;
+            bugInterval = setInterval(() => {
+                if (errorCount < 5) {
+                    console.warn(`[API] Failed to load resource: net::ERR_CONNECTION_REFUSED /api/v2/users/me`);
+                    errorCount++;
+                } else {
+                    console.log("Re-establishing connection...");
+                    clearInterval(bugInterval);
+                    bugInterval = null;
+                }
+            }, 800);
+            break;
+          default:
+            content.innerHTML = `<p>This is the ${page} page.</p>`;
+            bioText.textContent = `Content for ${page}`;
+            bioText.style.display = 'block';
+        }
+      }
+
+      function initializeGlobe() {
+        const canvas = document.getElementById("cobe");
+        if (!canvas || !window.createGlobe) return;
+        let phi = 5.04;
+        let theta = 0.09;
+        const width = canvas.offsetWidth * 2;
+        const height = canvas.offsetHeight * 2;
+        canvas.width = width;
+        canvas.height = height;
+
+        globe = window.createGlobe(canvas, {
+          devicePixelRatio: 2,
+          width,
+          height,
+          phi,
+          theta,
+          dark: 1,
+          diffuse: 2.75,
+          mapSamples: 33000,
+          mapBrightness: 2.5,
+          baseColor: [0.235, 0.235, 0.235],
+          markerColor: [0.345, 0.306, 0.780],
+          markerSize: 0.05,
+          glowColor: [0.5, 0.5, 0.5],
+          opacity: 0.9,
+          markers: [
+            { location: [37.78, -122.40], size: 0.05 },
+            { location: [51.52, -0.10], size: 0.05 },
+            { location: [41.88, -87.66], size: 0.05 },
+            { location: [53.34, -6.26], size: 0.05 },
+            { location: [-33.88, 151.21], size: 0.05 },
+          ],
+          onRender: (state) => {
+            state.phi = phi;
+            state.theta = theta;
+          },
+        });
+
+        let frameId = null;
+        const autoRotate = () => {
+          theta += 0.001;
+          frameId = requestAnimationFrame(autoRotate);
+        };
+
+        const onPointerMove = (e) => {
+          const currentX = e.clientX || e.touches[0].clientX;
+          const currentY = e.clientY || e.touches[0].clientY;
+          const deltaX = currentX - lastX;
+          const deltaY = currentY - lastY;
+          lastX = currentX;
+          lastY = currentY;
+          const horizontalSensitivity = 4;
+          const verticalSensitivity = 4;
+          theta += deltaX / canvas.width * horizontalSensitivity;
+          phi -= deltaY / canvas.height * verticalSensitivity;
+          phi = Math.max(0.1, Math.min(Math.PI - 0.1, phi));
+        };
+
+        const onPointerUp = () => {
+          document.removeEventListener('mousemove', onPointerMove);
+          document.removeEventListener('touchmove', onPointerMove);
+          document.removeEventListener('mouseup', onPointerUp);
+          document.removeEventListener('touchend', onPointerUp);
+          autoRotate();
+        };
+
+        const onPointerDown = (e) => {
+          if (e.type === 'touchstart') e.preventDefault();
+          cancelAnimationFrame(frameId);
+          lastX = e.clientX || e.touches[0].clientX;
+          lastY = e.clientY || e.touches[0].clientY;
+          document.addEventListener('mousemove', onPointerMove);
+          document.addEventListener('touchmove', onPointerMove, { passive: false });
+          document.addEventListener('mouseup', onPointerUp);
+          document.addEventListener('touchend', onPointerUp);
+        };
+
+        const onWheel = (e) => {
+          cancelAnimationFrame(frameId);
+          e.preventDefault();
+          const rotationFactor = 0.005;
+          theta += e.deltaY * rotationFactor;
+          clearTimeout(canvas.wheelTimeout);
+          canvas.wheelTimeout = setTimeout(() => autoRotate(), 500);
+        };
+
+        canvas.addEventListener('mousedown', onPointerDown);
+        canvas.addEventListener('touchstart', onPointerDown, { passive: false });
+        canvas.addEventListener('wheel', onWheel, { passive: false });
+        autoRotate();
+      }
+
+      function handleLogin() {
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        const validUsers = [
+          { email: "fadim.tonde+user001@intercom.io", name: "Mayor Nays", password: "Password123" },
+          { email: "fadim.tonde+user002@intercom.io", name: "Nat Ella", password: "Password123" },
+          { email: "fadim.tonde+user003@intercom.io", name: "Sam Balle", password: "Password123" },
+          { email: "fadim.tonde+user004@intercom.io", name: "Ollie Voil", password: "Password123" },
+        ];
+
+        const user = validUsers.find((u) => u.email === username && u.password === password);
+
+        if (user) {
+          const userData = {
+            app_id: "gk4dsbg8",
+            name: user.name,
+            email: user.email,
+            created_at: Math.floor(Date.now() / 1000),
+          };
+          localStorage.setItem("user", JSON.stringify(userData));
+          Intercom("boot", userData);
+          alert("Login successful! You are now recognized in Intercom as a user.");
+          loadPage("home");
+          updateLoginUI();
+        } else {
+          alert("Invalid credentials. Please try again.");
+        }
+      }
+
+      function logout() {
+        localStorage.removeItem("user");
+        Intercom("shutdown");
+        Intercom("boot", { app_id: "gk4dsbg8" });
+        alert("Logged out. You are now recognized in Intercom as a visitor.");
+        loadPage("home");
+        updateLoginUI();
+      }
+
+      function updateLoginUI() {
+        const isLoggedIn = localStorage.getItem("user") !== null;
+        const loginLink = document.querySelector(".link-login");
+        const logoutLink = document.querySelector(".link-logout");
+
+        if (loginLink && logoutLink) {
+          loginLink.style.display = isLoggedIn ? "none" : "inline-block";
+          logoutLink.style.display = isLoggedIn ? "inline-block" : "none";
+        }
+      }
+
+      function initializeIntercom() {
+        const userData = JSON.parse(localStorage.getItem("user"));
+        if (userData) {
+          Intercom("boot", userData);
+        } else {
+          Intercom("boot", { app_id: "gk4dsbg8" });
+        }
+      }
+
+      // --- Random Fact for Bio Text ---
+      const facts = [
+        "The universe is constantly expanding.",
+        "A light-year is the distance light travels in one Earth year.",
+        "There are more stars in the universe than grains of sand on all the beaches on Earth.",
+        "The Sun is an average-sized star.",
+        "Mars is known as the 'Red Planet'.",
+        "Jupiter is the largest planet in our solar system.",
+        "Saturn has the most spectacular ring system.",
+        "Our galaxy, the Milky Way, is a spiral galaxy."
+      ];
+      function setRandomFact() {
+        const bioText = document.querySelector(".bottom-left .bio");
+        const randomIndex = Math.floor(Math.random() * facts.length);
+        bioText.textContent = facts[randomIndex];
+      }
+
+      // --- Pong Game Logic ---
+      function initializePong() {
+        canvas = document.getElementById('pongCanvas');
+        if (!canvas) return;
+        ctx = canvas.getContext('2d');
+        // Reset player and ball positions/scores when game initializes
+        player1 = { x: 10, y: (canvas.height / 2) - 50, width: 10, height: 100, dy: 0, score: 0 };
+        player2 = { x: canvas.width - 20, y: (canvas.height / 2) - 50, width: 10, height: 100, dy: 0, score: 0 };
+        ball = { x: canvas.width / 2, y: canvas.height / 2, radius: 7, dx: 5, dy: 5 };
+        resetBall();
+        document.addEventListener('keydown', handlePongKeyDown);
+        document.addEventListener('keyup', handlePongKeyUp);
+        gameLoop();
+      }
+
+      function handlePongKeyDown(e) {
+        pressedKeys[e.key] = true;
+      }
+
+      function handlePongKeyUp(e) {
+        pressedKeys[e.key] = false;
+      }
+
+      function update() {
+        if (pressedKeys['w']) { player1.dy = -paddleSpeed; }
+        else if (pressedKeys['s']) { player1.dy = paddleSpeed; }
+        else { player1.dy = 0; }
+        player1.y += player1.dy;
+        if (player1.y < 0) player1.y = 0;
+        if (player1.y + player1.height > canvas.height) player1.y = canvas.height - player1.height;
+
+        if (ball.dx > 0) {
+            // Simple AI for player 2
+            if (player2.y + player2.height / 2 < ball.y) { player2.y += paddleSpeed * 0.9; }
+            else if (player2.y + player2.height / 2 > ball.y) { player2.y -= paddleSpeed * 0.9; }
+        }
+        if (player2.y < 0) player2.y = 0;
+        if (player2.y + player2.height > canvas.height) player2.y = canvas.height - player2.height;
+
+        ball.x += ball.dx;
+        ball.y += ball.dy;
+
+        // Ball collision with top/bottom walls
+        if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) { ball.dy *= -1; }
+
+        // Ball collision with paddles
+        if (ball.x - ball.radius < player1.x + player1.width && ball.y + ball.radius > player1.y && ball.y - ball.radius < player1.y + player1.height && ball.dx < 0) {
+            ball.dx *= -1;
+            // Add a slight random angle to prevent endless horizontal bouncing
+            ball.dy = (ball.y - (player1.y + player1.height / 2)) * 0.3;
+        }
+        if (ball.x + ball.radius > player2.x && ball.y + ball.radius > player2.y && ball.y - ball.radius < player2.y + player2.height && ball.dx > 0) {
+            ball.dx *= -1;
+            // Add a slight random angle to prevent endless horizontal bouncing
+            ball.dy = (ball.y - (player2.y + player2.height / 2)) * 0.3;
+        }
+
+        // Scoring
+        if (ball.x - ball.radius < 0) {
+            player2.score++;
+            resetBall();
+        } else if (ball.x + ball.radius > canvas.width) {
+            player1.score++;
+            resetBall();
+        }
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'white';
+
+        // Draw paddles
+        ctx.fillRect(player1.x, player1.y, player1.width, player1.height);
+        ctx.fillRect(player2.x, player2.y, player2.width, player2.height);
+
+        // Draw ball
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Draw scores
+        ctx.font = '30px "JetBrains Mono"';
+        ctx.fillText(player1.score, canvas.width / 4, 50);
+        ctx.fillText(player2.score, canvas.width * 3 / 4, 50);
+
+        // Draw dashed middle line
+        ctx.beginPath();
+        ctx.setLineDash([10, 10]);
+        ctx.moveTo(canvas.width / 2, 0);
+        ctx.lineTo(canvas.width / 2, canvas.height);
+        ctx.strokeStyle = 'white';
+        ctx.stroke();
+        ctx.setLineDash([]); // Reset line dash
+      }
+
+      function resetBall() {
+        ball.x = canvas.width / 2;
+        ball.y = canvas.height / 2;
+        // Randomize initial direction
+        ball.dx = (Math.random() > 0.5 ? 1 : -1) * 5;
+        ball.dy = (Math.random() > 0.5 ? 1 : -1) * 5;
+      }
+
+      function gameLoop() {
+        update();
+        draw();
+        pongAnimationFrameId = requestAnimationFrame(gameLoop);
+      }
+      // --- End Pong Game Logic ---
+
+      // Initialize Intercom when page loads
+      window.addEventListener("load", initializeIntercom);
+
+    </script>
+
+    <script>
+      // We pre-filled your app ID in the widget URL: 'https://widget.intercom.io/widget/gk4dsbg8'
+      (function () {
+        var w = window;
+        var ic = w.Intercom;
+        if (typeof ic === "function") {
+          ic("reattach_activator");
+          ic("update", w.intercomSettings);
+        } else {
+          var d = document;
+          var i = function () {
+            i.c(arguments);
+          };
+          i.q = [];
+          i.c = function (args) {
+            i.q.push(args);
+          };
+          w.Intercom = i;
+          var l = function () {
+            var s = d.createElement("script");
+            s.type = "text/javascript";
+            s.async = true;
+            s.src = "https://widget.intercom.io/widget/gk4dsbg8";
+            var x = d.getElementsByTagName("script")[0];
+            x.parentNode.insertBefore(s, x);
+          };
+          if (document.readyState === "complete") {
+            l();
+          } else if (w.attachEvent) {
+            w.attachEvent("onload", l);
+          } else {
+            w.addEventListener("load", l, false);
+          }
+        }
+      })();
+    </script>
+  </body>
+</html>
